@@ -451,6 +451,19 @@ function calculate() {
 }
 
 </script>
-
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js')
+        .then(function () {
+          console.log('Offline mode ready');
+        })
+        .catch(function (error) {
+          console.log('Offline mode error:', error);
+        });
+    });
+  }
+</script>
+  
 </body>
 </html>
