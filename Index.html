@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffcc00">
+
+  <title>MTN MoMo Fee Calculator Uganda</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .header {
+      background: #ffcc00;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 27px;
+    }
+
+    .header p {
+      margin: 8px 0 0;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 25px auto;
+      padding: 18px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 11px;
+      font-size: 17px;
+      background: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: #ffcc00;
+      border: none;
+      border-radius: 11px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .result {
+      display: none;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 14px;
+      background: #fafafa;
+    }
+
+    .result h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 9px 0;
+    }
+
+    .row span:last-child {
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .total {
+      margin-top: 10px;
+      padding-top: 15px;
+      border-top: 2px solid #ddd;
+      font-size: 18px;
+    }
+
+    .points {
+      margin-top: 15px;
+      background: #fff3bd;
+      padding: 13px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .note {
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #666;
+    }
+
+    .error {
+      display: none;
+      margin-top: 16px;
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    .source {
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>MTN MoMo Calculator</h1>
+  <p>Know your charge before you transact</p>
+</div>
+
+<div class="container">
+  <div class="card">
+
+    <label for="transaction">What do you want to do?</label>
+
+    <select id="transaction">
+      <option value="send">Send Money</option>
+      <option value="withdraw">Withdraw Money</option>
+      <option value="umeme">Pay UMEME</option>
+    </select>
+
+    <label for="amount">Enter Amount (UGX)</label>
+
+    <input
+      id="amount"
+      type="number"
+      min="500"
+      max="5000000"
+      step="1"
+      placeholder="e.g. 100000"
+    >
+
+    <button onclick="calculate()">Calculate Charge</button>
+
+    <div id="error" class="error"></div>
+
+    <div id="result" class="result">
+
+      <h2 id="resultTitle">Transaction Summary</h2>
+
+      <div class="row">
+        <span>Transaction amount</span>
+        <span id="amountResult"></span>
+      </div>
+
+      <div class="row">
+        <span id="feeLabel">MTN charge</span>
+        <span id="feeResult"></span>
+      </div>
+
+      <div class="row" id="taxRow">
+        <span>Withdrawal tax</span>
+        <span id="taxResult"></span>
+      </div>
+
+      <div class="row total">
+        <span id="totalLabel">Total required</span>
+        <span id="totalResult"></span>
+      </div>
+
+      <div class="points" id="pointsResult"></div>
+
+      <div class="note" id="note"></div>
+
+    </div>
+
+    <div class="source">
+      Based on MTN Uganda published Mobile Money tariffs
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+const tariffs = [
+
+  {min:500, max:2500,
+   send:100, withdraw:330, points:6, umeme:190},
+
+  {min:2501, max:5000,
+   send:100, withdraw:440, points:8, umeme:600},
+
+  {min:5001, max:15000,
+   send:500, withdraw:700, points:14, umeme:1000},
+
+  {min:15001, max:30000,
+   send:500, withdraw:880, points:16, umeme:1600},
+
+  {min:30001, max:45000,
+   send:500, withdraw:1210, points:24, umeme:2100},
+
+  {min:45001, max:60000,
+   send:500, withdraw:1500, points:30, umeme:2800},
+
+  {min:60001, max:125000,
+   send:1000, withdraw:1925, points:38, umeme:3700},
+
+  {min:125001, max:250000,
+   send:1000, withdraw:3575, points:70, umeme:4150},
+
+  {min:250001, max:500000,
+   send:1000, withdraw:7000, points:140, umeme:5300},
+
+  {min:500001, max:1000000,
+   send:1500, withdraw:12500, points:150, umeme:6300},
+
+  {min:1000001, max:2000000,
+   send:2000, withdraw:15000, points:300, umeme:6300},
+
+  {min:2000001, max:4000000,
+   send:2000, withdraw:18000, points:360, umeme:6300},
+
+  {min:4000001, max:5000000,
+   send:2000, withdraw:20000, points:400, umeme:6300}
+
+];
+
+
+function money(number) {
+
+  return "UGX " +
+    Math.round(number).toLocaleString("en-UG");
+
+}
+
+
+function findTariff(amount) {
+
+  return tariffs.find(
+    band => amount >= band.min && amount <= band.max
+  );
+
+}
+
+
+function calculate() {
+
+  const amount =
+    Number(document.getElementById("amount").value);
+
+  const type =
+    document.getElementById("transaction").value;
+
+  const result =
+    document.getElementById("result");
+
+  const error =
+    document.getElementById("error");
+
+  result.style.display = "none";
+  error.style.display = "none";
+
+
+  if (!amount || amount < 500) {
+
+    error.innerText =
+      "Please enter an amount of at least UGX 500.";
+
+    error.style.display = "block";
+
+    return;
+  }
+
+
+  if (amount > 5000000) {
+
+    error.innerText =
+      "MTN's published maximum transaction limit is UGX 5,000,000.";
+
+    error.style.display = "block";
+
+    return;
+  }
+
+
+  const tariff = findTariff(amount);
+
+
+  if (!tariff) {
+
+    error.innerText =
+      "No tariff was found for this amount.";
+
+    error.style.display = "block";
+
+    return;
+  }
+
+
+  let fee = 0;
+  let tax = 0;
+  let total = 0;
+
+
+  document.getElementById("amountResult").innerText =
+    money(amount);
+
+  document.getElementById("pointsResult").innerText =
+    "Senkyu Points: " + tariff.points;
+
+
+  /* SEND MONEY */
+
+  if (type === "send") {
+
+    fee = tariff.send;
+
+    total = amount + fee;
+
+    document.getElementById("resultTitle").innerText =
+      "Send Money Summary";
+
+    document.getElementById("feeLabel").innerText =
+      "Sending fee";
+
+    document.getElementById("feeResult").innerText =
+      money(fee);
+
+    document.getElementById("taxRow").style.display =
+      "none";
+
+    document.getElementById("totalLabel").innerText =
+      "Total wallet balance required";
+
+    document.getElementById("totalResult").innerText =
+      money(total);
+
+    document.getElementById("note").innerText =
+      "This is the MTN published fee for sending to MTN or other networks.";
+
+  }
+
+
+  /* WITHDRAW MONEY */
+
+  if (type === "withdraw") {
+
+    fee = tariff.withdraw;
+
+    /*
+       Uganda withdrawal tax:
+       0.5% of the amount withdrawn.
+    */
+
+    tax = amount * 0.005;
+
+    total = amount + fee + tax;
+
+    document.getElementById("resultTitle").innerText =
+      "Withdrawal Summary";
+
+    document.getElementById("feeLabel").innerText =
+      "Agent withdrawal fee";
+
+    document.getElementById("feeResult").innerText =
+      money(fee);
+
+    document.getElementById("taxRow").style.display =
+      "flex";
+
+    document.getElementById("taxResult").innerText =
+      money(tax);
+
+    document.getElementById("totalLabel").innerText =
+      "Total wallet balance required";
+
+    document.getElementById("totalResult").innerText =
+      money(total);
+
+    document.getElementById("note").innerText =
+      "You receive " +
+      money(amount) +
+      " in cash. The withdrawal fee and applicable withdrawal tax are deducted from your MoMo wallet.";
+
+  }
+
+
+  /* UMEME */
+
+  if (type === "umeme") {
+
+    fee = tariff.umeme;
+
+    total = amount + fee;
+
+    document.getElementById("resultTitle").innerText =
+      "UMEME Payment Summary";
+
+    document.getElementById("feeLabel").innerText =
+      "UMEME payment charge";
+
+    document.getElementById("feeResult").innerText =
+      money(fee);
+
+    document.getElementById("taxRow").style.display =
+      "none";
+
+    document.getElementById("totalLabel").innerText =
+      "Total wallet balance required";
+
+    document.getElementById("totalResult").innerText =
+      money(total);
+
+    document.getElementById("note").innerText =
+      "This uses MTN Uganda's published charge for payments to UMEME, NWSC, DStv, StarTimes, NSSF and Multiplex.";
+
+  }
+
+
+  result.style.display = "block";
+
+}
+
+</script>
+
+</body>
+</html>
