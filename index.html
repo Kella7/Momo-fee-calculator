@@ -149,7 +149,7 @@
 <div class="container">
   <div class="card">
 
-    <label for="transaction">What do you want to do?</label>
+    <label for="network">Network</label><select id="network"><option value="mtn">MTN MoMo</option><option value="airtel">Airtel Money</option></select><label for="transaction">What do you want to do?</label>
 
     <select id="transaction">
       <option value="send">Send Money</option>
@@ -273,6 +273,15 @@ function findTariff(amount) {
 
 
 function calculate() {
+  if(document.getElementById("network").value==="airtel"){
+    const amount=Number(document.getElementById("amount").value);
+    const error=document.getElementById("error");
+    document.getElementById("result").style.display="none";
+    error.style.display="block";
+    error.innerText=Number.isFinite(amount)&&amount>=500 ? "Airtel Money is supported, but the exact tariff for this amount has not yet been verified from an official current band-by-band guide. Check the Airtel Money app or dial *185# before confirming." : "Enter an amount of at least UGX 500.";
+    return;
+  }
+
 
   const amount =
     Number(document.getElementById("amount").value);
